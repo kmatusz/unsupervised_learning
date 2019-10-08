@@ -269,7 +269,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -367,14 +366,35 @@ summary {
 </div>
 
 
-<div id="intro-class" class="section level4">
-<h4>1. Intro class</h4>
+<div id="intro-class" class="section level3">
+<h3>1. Intro class</h3>
 <ul>
 <li>More intuition, less coding</li>
 <li>Many models</li>
 <li>Papers after each part</li>
 <li></li>
 </ul>
+<div id="k-means-and-pam" class="section level4">
+<h4>K-means and PAM</h4>
+<ul>
+<li>k-means - abstract point</li>
+<li>PAM - concrete point form dataset</li>
+</ul>
+<p>PAM: 1. Find set of points to be medoids 2. assign every point to the closest medoid 3.</p>
+</div>
+<div id="distances" class="section level4">
+<h4>Distances</h4>
+<p>Euclidean: Sum of squares of distances Mannhatan: Sum of absolutes of distances Minkovski: Generalised version</p>
+<ul>
+<li>Minkovski - when everything’s not working, gives “round” results</li>
+</ul>
+</div>
+<div id="silhouette" class="section level4">
+<h4>Silhouette</h4>
+<p>Is number of clusters right?</p>
+<p>For each observation check if the assgned cluster is the closest one. Silhouette for one observation is difference between my cluster to next-closest cluster. Silhouette for all is the mean.</p>
+<p>Higher the better. Really bad when negative</p>
+</div>
 </div>
 
 

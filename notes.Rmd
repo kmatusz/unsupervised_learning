@@ -7,9 +7,45 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#### 1. Intro class 
+### 1. Intro class 
 
 - More intuition, less coding
 - Many models 
 - Papers after each part 
 - 
+
+#### K-means and PAM
+
+- k-means - abstract point
+- PAM - concrete point form dataset
+
+PAM:
+1. Find set of points to be medoids
+2. assign every point to the closest medoid 
+3. 
+
+
+#### Distances
+
+Euclidean: Sum of squares of distances
+Mannhatan: Sum of absolutes of distances
+Minkovski: Generalised version
+
+- Minkovski - when everything's not working, gives "round" results
+
+
+#### Silhouette 
+
+Is number of clusters right? 
+
+For each observation check if the assgned cluster is the closest one. Silhouette for one observation is difference between my cluster to next-closest cluster. Silhouette for all is the mean. 
+
+Higher the better. Really bad when negative
+
+
+
+
+
+
+
+
