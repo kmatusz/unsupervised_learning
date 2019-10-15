@@ -106,6 +106,16 @@ pam3<-pam(xxx_big,3)
 
 
 #### TASK 1
+km.xxx.2<-eclust(xxx, "kmeans", hc_metric="euclidean",k=2)
+km.xxx.2$centers
+
+km.xxx.3<-eclust(xxx, "kmeans", hc_metric="euclidean",k=3)
+km.xxx.3$centers
+
+plot(km.xxx.2$centers, col="black", pch=17, cex=1.1, xlim=c(0,31), ylim=c(60,170))
+points(km.xxx.3$centers, col="red", pch=18, cex=1)
+legend(20,160, c("KMeans k=2","KMeans k=3"), col=c("black","red"), pch=c(17,18), bty="n")
+points(xxx, col="grey20", pch=".")
 
 
 
