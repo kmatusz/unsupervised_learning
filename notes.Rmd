@@ -43,9 +43,12 @@ For each observation check if the assgned cluster is the closest one. Silhouette
 Higher the better. Really bad when negative
 
 
+### Class 2
+Kmeans goals:
 
-
-
+- Run classification
+- Test measures
+- Predictions
 
 
 
