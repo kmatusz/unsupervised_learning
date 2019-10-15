@@ -22,7 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
 PAM:
 1. Find set of points to be medoids
 2. assign every point to the closest medoid 
-3. 
+3. For every point (not medoid) check if it would be better medoid
+4. If best point is chosen end
 
 
 #### Distances
@@ -40,7 +41,7 @@ Is number of clusters right?
 
 For each observation check if the assgned cluster is the closest one. Silhouette for one observation is difference between my cluster to next-closest cluster. Silhouette for all is the mean. 
 
-Higher the better. Really bad when negative
+Higher the better. Really bad when negative (means that assigned cluster is wrong)
 
 
 ### Class 2
