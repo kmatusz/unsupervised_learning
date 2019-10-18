@@ -32,5 +32,56 @@ Każdy eksperyment 1000 razy
 
 
 
+K-means is one of the most popular clustering techniques, used by many for a long time. 
+
+As the matter of fact, a task that k-means tries to solve is proven to be NP-hard. That means that it is impossible to create an algorithm that will find optimal solution in reasonable (polynomial, to be exact) time.
+
+
+K-means algorithm can be divided into two parts-one is center initialisation and the other one is actual algorithm.
+
+Let's create a simple dataset to demonstrate that. I have created 3 clusters in 2-dimensional space. Each cluster was obtained by sampling 100 points from gaussian distribution, with sd=1. I have arbitrarly chosen cluster centers. Generated dataset looks like this:
+
+As the dataset is artificially generated, I can actually pass correct cluster centers to k-means function. 
+
+Now, let's run the k-means algorithm multiple times to randomise initial centers. Our benchmark model fitting gives metric equal to ... . In table ... clustering bins are shown. As we can see, despite pretty homogenous results fitting in range ...., there is also small amount of results with much higher value. I have plotted one representative clustering result below:
+
+As we can see, 2 initial clusters were actually merged into one, and other cluster got split. 
+
+K-means++ is designed to overcome these faults. 
+
+We have to analyze centers initialisation phase. In standard k-means, k centers are randomly chosen from the input dataset. 
+
+Intuition behind k-means++ is as follows: Choosing centers distant from each other is a good thing. 
+
+In the original paper, the algorithm was defined as follows: ...
+
+In python Machine Learning library scikit-learn, default k-means algorithm actually implements "++" version by default. 
+In R, k-means++ is implemented in flexclust package. To test both approaches, however, was inconvenient, as flexclust is implemented in S4 classes, and that makes it incompatibile with other clustering packages, factoextra for instance. Thats why I have copied inner workings of algorithm from flexclust, which is defined in private function kmeanspp. The algorithm looks like this:
+
+To apply it in replacement for stats::kmeans default, the code looks like this:
+
+To test the working of the algorithm, I have applied  standard and "++" version in few conditions. 
+I have created few artificial datasets and manipulated few parameters, namely number of clusters *k* and number of dimensions *dim_cnt*. 
+
+
+
+
+Procedure of initialisation implemented in stats package is pretty straighforward. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
