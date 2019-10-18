@@ -1,0 +1,36 @@
+---
+title: "Presentation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Wstęp
+2. Potencjalne problemy k-means, wymienienie złej inicjalizacji (przykład z prostokątem)
+3. Przykład z puszczeniem 1000 razy, pokazanie złego klastrowania
+4. Pokazanie wykresu z betweenss
+3. Pokazanie rozwiązania kmeans++, wspomnienie że w pythonie to default
+4. Opis algorytmu po kolei, pseudocode 
+5. Opis teoretycznych możliwości na przykładzie (wzrost efektywności)
+6. Symulacje
+7. Dataset sztuczny 3 klastry tak jak wcześniej
+8. Modulacja ilości punktów w klastrze
+9. Modulacja ilości klastrów - demonstracyjnie 10
+10. Porównanie rezultatów - kmeans++ lepsze ale niewiele
+11. Rekomendacje co do stosowania - małe zbiory danych, dużo klastrów
+12. Wspomnienie że jest wolny, pokazanie kmeans||
+
+
+Rezultaty: 
+1. 3 klastry w 2-dim (10000 obserwacji sumarycznie)
+2. 10 klastrów w 10 dim (10000 obserwacji sumarycznie)
+
+Każdy eksperyment 1000 razy
+
+
+
+
+
+
