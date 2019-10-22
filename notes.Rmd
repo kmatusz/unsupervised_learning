@@ -52,4 +52,26 @@ Kmeans goals:
 - Predictions
 
 
+### Class 3 - pre- and post-diagnostics
+
+- Statistics in clustered groups - differences between clusters obtained
+- Usually data has features (used in clustering), and extra profiling.
+- Example - features: debt, earnings etc. profiling: age, sex etc.
+
+- Distance from cluster center
+- Boxplots for variables in groups
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
