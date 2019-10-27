@@ -1,7 +1,7 @@
 # funs ---
 create_one_cluster <- function(center, size) {
-  center %>% map(function(x) {
-    rnorm(size, mean = x)
+  center %>% purrr::map(function(x) {
+    rnorm(size, mean = x, sd = 1)
   }) %>%
     as.data.frame() -> out
   

@@ -1,10 +1,11 @@
 ---
 title: "Presentation"
-output: html_document
+output: 
+  html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 1. Wstęp
@@ -29,39 +30,205 @@ Rezultaty:
 
 Każdy eksperyment 1000 razy
 
+```{r}
+library(tidyverse)
+library(kableExtra)
+library(factoextra)
+```
 
 
 
-K-means is one of the most popular clustering techniques, used by many for a long time. 
+K-means is one of the most popular clustering techniques, used by many for a long time. Its simplicity and relative speed are appealing. However, the corectness of the results can be questionable and vary from one run to another. 
 
-As the matter of fact, a task that k-means tries to solve is proven to be NP-hard. That means that it is impossible to create an algorithm that will find optimal solution in reasonable (polynomial, to be exact) time.
+Let's create a simple dataset to demonstrate that. I have created 3 clusters in 2-dimensional space. Each cluster was obtained by sampling 100 points from gaussian distribution, with sd=1. I have arbitrarly chosen cluster centers. As I will repeat the procedure of generating random clusters throughout the whole analysis, I have created simple functions to automate this task.
+First function, *create_one_cluster*, creates points from one cluster when given center:
+
+```{r }
+create_one_cluster <- function(center, size) {
+  # Center - cluster center coordinates, given as list
+  # Size - amount of points to create
+  
+  center %>% purrr::map(function(x) {
+    rnorm(size, mean = x, sd = 1)
+  }) %>%
+    as.data.frame() -> out
+  
+  names(out) <- paste0("x", seq_along(names(out)))
+  out
+}
+```
 
 
-K-means algorithm can be divided into two parts-one is center initialisation and the other one is actual algorithm.
+Results look like this:
 
-Let's create a simple dataset to demonstrate that. I have created 3 clusters in 2-dimensional space. Each cluster was obtained by sampling 100 points from gaussian distribution, with sd=1. I have arbitrarly chosen cluster centers. Generated dataset looks like this:
+```{r}
+create_one_cluster(list(1,2), 10) %>% 
+  kable() %>% 
+  kable_styling()
+```
 
-As the dataset is artificially generated, I can actually pass correct cluster centers to k-means function. 
 
-Now, let's run the k-means algorithm multiple times to randomise initial centers. Our benchmark model fitting gives metric equal to ... . In table ... clustering bins are shown. As we can see, despite pretty homogenous results fitting in range ...., there is also small amount of results with much higher value. I have plotted one representative clustering result below:
+This function takes a list of cluster centers and generates points:
 
-As we can see, 2 initial clusters were actually merged into one, and other cluster got split. 
+```{r}
+sample_clusters <- function(centers, size = 10) {
+  # centers - list
+  centers %>%
+    purrr::map(create_one_cluster, size) %>%
+    dplyr::bind_rows(.id = "cluster_id")
+}
+```
 
-K-means++ is designed to overcome these faults. 
 
-We have to analyze centers initialisation phase. In standard k-means, k centers are randomly chosen from the input dataset. 
+```{r}
+cluster_centers <- list(c(1, 10),
+                        c(2, 3),
+                        c(5, 8))
 
-Intuition behind k-means++ is as follows: Choosing centers distant from each other is a good thing. 
+sample_clusters(cluster_centers, 100) -> data_with_id
+```
 
-In the original paper, the algorithm was defined as follows: ...
 
-In python Machine Learning library scikit-learn, default k-means algorithm actually implements "++" version by default. 
-In R, k-means++ is implemented in flexclust package. To test both approaches, however, was inconvenient, as flexclust is implemented in S4 classes, and that makes it incompatibile with other clustering packages, factoextra for instance. Thats why I have copied inner workings of algorithm from flexclust, which is defined in private function kmeanspp. The algorithm looks like this:
+```{r}
+data_with_id %>%
+  head() %>%
+  kable() %>% 
+  kable_styling()
+```
+
+Let's plot the dataset:
+
+```{r}
+ggplot(data_with_id, aes(x = x1, y = x2, color = cluster_id)) +
+  geom_point() +
+  theme_minimal() +
+  coord_fixed()
+```
+
+This looks like a pretty clusterable dataset. Indeed, running kmeans give a nice, predicted result:
+
+```{r}
+data <- data_with_id %>% select(-cluster_id)
+
+kmeans(data, centers = 3) -> res
+res %>% fviz_cluster(data)
+
+```
+
+The sum of between sum of squares is `r round(res$betweenss,2)`.
+
+Now, let's run the algorithm multiple times, and check how this metric is going to behave. Again, for convenience I have created a function gathering results from multiple runs automatically. The function uses *broom* to tidy the results in a tidyverse-way:
+
+```{r}
+run <- function(data,
+                niter = 1000,
+                k = 3) {
+  # Bulk standard k means clustering
+  map(1:niter, function(x) {
+      kmeans(data, centers = k)
+  }) -> bulk_results
+  
+  # saving cluster results to data frame
+  bulk_results %>%
+    map_df(function(x) {
+      broom::glance(x)
+    }) -> cluster_results
+  
+  cluster_results$cluster_object <- bulk_results
+  
+  
+  cluster_results
+}
+
+```
+
+```{r}
+bulk_results <- run(data, niter = 1000, k = 3)
+bulk_results %>% 
+  head(10)
+
+```
+
+
+Let's check how the between sum of squares behaved.
+```{r}
+ggplot(bulk_results, aes(x=betweenss))+ 
+  geom_histogram() 
+```
+
+As we can see, the majority of clusterings is close to the most optimal one. However, there is also some amount of clusterings with betweenss at around 2650. This is how such example clustering looks like:
+
+```{r}
+bulk_results %>%
+  filter(betweenss < 3000) %>%
+  head(1) %>%
+  .$cluster_object %>%
+  .[[1]] %>%
+  fviz_cluster(data = data)
+```
+
+
+As we can see, clustering is highly suboptimal compared to ground-truth model. 
+
+One could wonder, how to overcome these fault clusterings. One way would be to run the algorithm multiple times, and choose the best run. The solution was proposed by ... . The main part of algoirthm stays the same. The difference lies in centers initialisation phase. In standard k-means, k centers are randomly chosen from the input dataset. In the original kmeans++ paper, the algorithm was defined as follows: ...
+
+
+
+Intuition behind k-means++ is as follows: Choosing centers distant from each other is a good thing. Authors prove that this algoirthm asymptotically gives ln k better results than random initialisation algorithm. 
+
+
+In python Machine Learning library *scikit-learn*, default k-means algorithm actually implements "++" version by default. 
+In R, k-means++ is implemented in *flexclust* package. To test both approaches, however, was inconvenient, as *flexclust* is implemented in S4 classes, and that makes it incompatibile with other clustering packages, factoextra for instance. Thats why I have copied inner workings of algorithm from flexclust, which is defined in private function kmeanspp. The algorithm looks like this:
+
+```{r}
+kmeanspp <- function(x, k)
+{
+  x <- as.matrix(x)
+  centers <- matrix(0, nrow = k, ncol = ncol(x))
+  centers[1, ] <- x[sample(1:nrow(x), 1), , drop = FALSE] # Take first point at random
+  target_point <- centers[1L, , drop = FALSE] 
+  
+  d <- apply(x, MARGIN = 1,
+             function(x)
+               (sqrt(sum((x - target_point) ^ 2)))^2) # calculate distance froom every point to the starting point
+  for (l in 2:k) {
+    centers[l, ] <- x[sample(1:nrow(x), 1, prob = d), , drop = FALSE] # Select next point with probability weighted by distance from starting point
+    
+    target_point <- centers[l, , drop = FALSE]
+    
+    arg2 <- apply(x, MARGIN = 1,
+                  function(x)
+                    (sqrt(sum((x - target_point) ^ 2)))^2)
+    d <- pmin(d, arg2)
+    
+    
+    
+  }
+  centers
+}
+```
+
 
 To apply it in replacement for stats::kmeans default, the code looks like this:
 
-To test the working of the algorithm, I have applied  standard and "++" version in few conditions. 
+```{r}
+kmeans(data, centers = kmeanspp(data, k))
+```
+
+
+
+
+
+To test the working of the algorithm, I have applied standard and "++" version in few conditions. 
 I have created few artificial datasets and manipulated few parameters, namely number of clusters *k* and number of dimensions *dim_cnt*. 
+
+I have created two artificial datasets - one with k=3 and 2 dimensions, and the other one with k=10 and 10 dimensions. In both cases, cluster centers were chosen uniformly from a [0, 500] space. The clusters were generated from n-dimensional Gaussian with cov=0 and sd = 1. Each cluster consisted of 100 points. 
+
+As the simulations took a long time on my computer, I calculated them once and saved as Rdata. The codes are avaliable in *aa.R* here. 
+
+K-means algorithm can be divided into two parts-one is center initialisation and the other one is actual algorithm.
+
+
 
 
 

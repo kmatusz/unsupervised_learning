@@ -36,7 +36,7 @@ mean(exp1_pp$betweenss)
 mean(exp2$betweenss)
 mean(exp2_pp$betweenss)
 
-mean(exp2$betweenss) / mean(exp2_pp$betweenss)
+mean(exp2$beweenss) / mean(exp2_pp$betweenss)
 
 
 mean(exp1$tot.withinss)
