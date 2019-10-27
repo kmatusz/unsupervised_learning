@@ -106,17 +106,50 @@ pam3<-pam(xxx_big,3)
 
 
 #### TASK 1
+km_list <- map(1:5, function(x) {
+  eclust(xxx, "kmeans", hc_metric = "euclidean", k=x)
+})
+
+
 km.xxx.2<-eclust(xxx, "kmeans", hc_metric="euclidean",k=2)
-km.xxx.2$centers
 
 km.xxx.3<-eclust(xxx, "kmeans", hc_metric="euclidean",k=3)
-km.xxx.3$centers
+
+km.xxx.4<-eclust(xxx, "kmeans", hc_metric="euclidean",k=4)
+
+km.xxx.5<-eclust(xxx, "kmeans", hc_metric="euclidean",k=5)
+
+
+
 
 plot(km.xxx.2$centers, col="black", pch=17, cex=1.1, xlim=c(0,31), ylim=c(60,170))
 points(km.xxx.3$centers, col="red", pch=18, cex=1)
-legend(20,160, c("KMeans k=2","KMeans k=3"), col=c("black","red"), pch=c(17,18), bty="n")
+points(km.xxx.4$centers, col="green", pch=16, cex=1)
+points(km.xxx.5$centers, col="blue", pch=15, cex=1)
+legend(20,160, 
+       c("KMeans k=2","KMeans k=3", "KMeans k=4", "KMeans k=5"), 
+       col=c("black","red","green", "blue"), 
+       pch=c(17,18,16,15 ), bty="n")
 points(xxx, col="grey20", pch=".")
 
+
+
+
+
+
+
+
+
+
+
+pam.yyy.2 <- eclust(xxx, "pam", hc_metric="euclidean",k=2)
+
+
+library(plotly)
+library(dplyr)
+plot_ly() %>%
+  add_markers(x=km.yyy$centers$XA06,y=km.yyy$centers$XA31, z=km.yyy$centers$workforce.ratio,
+              marker = list(size = 2, color = "blue"))
 
 
   
