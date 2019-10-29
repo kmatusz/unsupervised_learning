@@ -8,27 +8,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-1. Wstęp
-2. Potencjalne problemy k-means, wymienienie złej inicjalizacji (przykład z prostokątem)
-3. Przykład z puszczeniem 1000 razy, pokazanie złego klastrowania
-4. Pokazanie wykresu z betweenss
-3. Pokazanie rozwiązania kmeans++, wspomnienie że w pythonie to default
-4. Opis algorytmu po kolei, pseudocode 
-5. Opis teoretycznych możliwości na przykładzie (wzrost efektywności)
-6. Symulacje
-7. Dataset sztuczny 3 klastry tak jak wcześniej
-8. Modulacja ilości punktów w klastrze
-9. Modulacja ilości klastrów - demonstracyjnie 10
-10. Porównanie rezultatów - kmeans++ lepsze ale niewiele
-11. Rekomendacje co do stosowania - małe zbiory danych, dużo klastrów
-12. Wspomnienie że jest wolny, pokazanie kmeans||
 
 
-Rezultaty: 
-1. 3 klastry w 2-dim (10000 obserwacji sumarycznie)
-2. 10 klastrów w 10 dim (10000 obserwacji sumarycznie)
-
-Każdy eksperyment 1000 razy
 
 ```{r}
 library(tidyverse)
@@ -37,8 +18,10 @@ library(factoextra)
 ```
 
 
+#### R user, don't trust k-means
 
-K-means is one of the most popular clustering techniques, used by many for a long time. Its simplicity and relative speed are appealing. However, the corectness of the results can be questionable and vary from one run to another. 
+
+K-means is one of the most popular clustering techniques, used by many for a long time. Its simplicity and relative speed are appealing. Using the default R *stats::kmeans* function is straightforward and a go-to choice for many analysts searching for clustering method. However, the corectness of the results can be questionable and vary from one run to another. 
 
 Let's create a simple dataset to demonstrate that. I have created 3 clusters in 2-dimensional space. Each cluster was obtained by sampling 100 points from gaussian distribution, with sd=1. I have arbitrarly chosen cluster centers. As I will repeat the procedure of generating random clusters throughout the whole analysis, I have created simple functions to automate this task.
 First function, *create_one_cluster*, creates points from one cluster when given center:
