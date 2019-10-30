@@ -23,3 +23,16 @@ results_k10_n10_all %>%
     max = max(tot.withinss)
   ) %>% 
   arrange(desc(type))
+
+
+d<-get_dist(data_k10_n10, method = "euclidean")
+fviz_dist(d, show_labels = FALSE)+ labs(title = "Dissimilarity matrix (n = 10, k= 10)") -> diss_k10_n10
+diss_k10_n10
+
+d<-get_dist(data_k3_n2, method = "euclidean")
+fviz_dist(d, show_labels = FALSE)+ labs(title = "Dissimilarity matrix (n = 2, k= 3)") -> diss_k3_n2
+diss_k3_n2
+
+
+
+

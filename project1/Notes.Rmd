@@ -8,28 +8,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-1. Wstęp
-2. Potencjalne problemy k-means, wymienienie złej inicjalizacji (przykład z prostokątem)
-3. Przykład z puszczeniem 1000 razy, pokazanie złego klastrowania
-4. Pokazanie wykresu z betweenss
-3. Pokazanie rozwiązania kmeans++, wspomnienie że w pythonie to default
-4. Opis algorytmu po kolei, pseudocode 
-5. Opis teoretycznych możliwości na przykładzie (wzrost efektywności)
-6. Symulacje
-7. Dataset sztuczny 3 klastry tak jak wcześniej
-8. Modulacja ilości punktów w klastrze
-9. Modulacja ilości klastrów - demonstracyjnie 10
-10. Porównanie rezultatów - kmeans++ lepsze ale niewiele
-11. Rekomendacje co do stosowania - małe zbiory danych, dużo klastrów
-12. Wspomnienie że jest wolny, pokazanie kmeans||
-
-
-Rezultaty: 
-1. 3 klastry w 2-dim (10000 obserwacji sumarycznie)
-2. 10 klastrów w 10 dim (10000 obserwacji sumarycznie)
-
-Każdy eksperyment 1000 razy
-
 ```{r}
 library(tidyverse)
 library(kableExtra)
@@ -161,12 +139,12 @@ ggplot(bulk_results, aes(x=betweenss))+
 As we can see, the majority of clusterings is close to the most optimal one. However, there is also some amount of clusterings with betweenss at around 2650. This is how such example clustering looks like:
 
 ```{r}
-# bulk_results %>%
-#   filter(betweenss < 3000) %>%
-#   head(1) %>%
-#   .$cluster_object %>%
-#   .[[1]] %>%
-#   fviz_cluster(data = data)
+bulk_results %>%
+  filter(betweenss < 3000) %>%
+  head(1) %>%
+  .$cluster_object %>%
+  .[[1]] %>%
+  fviz_cluster(data = data)
 ```
 
 
@@ -180,7 +158,7 @@ Intuition behind k-means++ is as follows: Choosing centers distant from each oth
 
 
 In python Machine Learning library *scikit-learn*, default k-means algorithm actually implements "++" version by default. 
-In R, k-means++ is implemented in *flexclust* package. To test both approaches, however, was inconvenient, as *flexclust* is implemented in S4 classes, and that makes it incompatibile with other clustering packages, factoextra for instance. Thats why I have copied inner workings of algorithm from flexclust, which is defined in private function kmeanspp. The algorithm looks like this:
+In R, k-means++ is implemented in *flexclust* package. To test both approaches, however, was inconvenient, as *flexclust* is implemented in S4 classes, and that makes it incompatibile with other clustering packages, factoextra for instance. Thats why I have copied inner workings of algorithm from flexclust, which is defined in private function kmeanspp. I have also optimised the function to take advantage of vectorised operations. This gave a 2-times time improvement. The improved algorithm looks like this:
 
 ```{r}
 kmeanspp <- function(x, k)
@@ -190,18 +168,27 @@ kmeanspp <- function(x, k)
   centers[1, ] <- x[sample(1:nrow(x), 1), , drop = FALSE] # Take first point at random
   target_point <- centers[1L, , drop = FALSE] 
   
-  d <- apply(x, MARGIN = 1,
-             function(x)
-               (sqrt(sum((x - target_point) ^ 2)))^2) # calculate distance froom every point to the starting point
+  map(1:ncol(x), function(i){
+      (x[,i] - target_point[,i]) ^ 2
+    }) -> distances_list
+    
+    
+  d <- sqrt(Reduce(`+`, distances_list))^2
+  
   for (l in 2:k) {
     centers[l, ] <- x[sample(1:nrow(x), 1, prob = d), , drop = FALSE] # Select next point with probability weighted by distance from starting point
     
     target_point <- centers[l, , drop = FALSE]
     
-    arg2 <- apply(x, MARGIN = 1,
-                  function(x)
-                    (sqrt(sum((x - target_point) ^ 2)))^2)
+    map(1:ncol(x), function(i){
+      (x[,i] - target_point[,i]) ^ 2
+    }) -> distances_list
+    
+    
+    arg2 <- sqrt(Reduce(`+`, distances_list))^2
     d <- pmin(d, arg2)
+    
+    
     
     
     
@@ -226,10 +213,41 @@ I have created few artificial datasets and manipulated few parameters, namely nu
 
 I have created two artificial datasets - one with k=3 and 2 dimensions, and the other one with k=10 and 10 dimensions. In both cases, cluster centers were chosen uniformly from a [0, 500] space. The clusters were generated from n-dimensional Gaussian with cov=0 and sd = 1. Each cluster consisted of 100 points. 
 
-As the simulations took a long time on my computer, I calculated them once and saved as Rdata. The codes are avaliable in *aa.R* here. I have plotted total within-sum-of-squares. Once again, the less the better:
+As the dataset is artificially generated, we explicitly know what perfect centers are. To use this fact, I have run kmeans with perfect centers passed. This way we can compare results of clusterings to a perfect benchmark. The code:
 
 ```{r}
 load("results/batch_experiments.Rdata")
+
+results_k10_n10_perfect <- kmeans(data_k10_n10, centers = data_k10_n10_centers)
+results_k3_n2_perfect <- kmeans(data_k3_n2, centers = data_k3_n2_centers)
+
+```
+
+Value of tot.withinss for k = 3 is equal to `r round(results_k3_n2_perfect$tot.withinss, 2)`, while for dataset with k = 10 - `r round(results_k10_n10_perfect$tot.withinss, 2)`
+
+
+
+```{r}
+
+
+d<-get_dist(data_k10_n10[sample(1:nrow(data_k10_n10), 100),], method = "euclidean")
+fviz_dist(d, show_labels = FALSE)+ labs(title = "Dissimilarity matrix (n = 10, k= 10)") -> diss_k10_n10
+
+d<-get_dist(data_k3_n2, method = "euclidean")
+fviz_dist(d, show_labels = FALSE)+ labs(title = "Dissimilarity matrix (n = 2, k= 3)") -> diss_k3_n2
+```
+
+```{r}
+cowplot::plot_grid(diss_k10_n10, diss_k3_n2)
+```
+
+
+As the simulations took a long time on my computer, I calculated them once and saved as Rdata. The codes are avaliable in *aa.R* here. I have plotted total within-sum-of-squares. Once again, the less the better:
+
+Dashed line presents benchmark results, which were caluclated earlier. 
+
+```{r}
+
 results_k10_n10 %>% 
   mutate(type = "standard") %>%
   rbind(results_k10_n10_pp %>% 
@@ -262,7 +280,7 @@ results_k10_n10_all %>%
 
 
 
-What are the drawbacks of kmeans++? There is one: speed. As of standard algorithm, the initialisation phase is done in consant time - one should only choose k random points from the dataset. In kmeans++, on the contrary, after the first center is chosen, the distance to each of the remaining points are calculated. This means passing the data k times, thus time complexity is *O(k)*. I have created a basic benchmark for both algorithms comparison:
+What are the drawbacks of kmeans++? There is one: speed. As of standard algorithm, the initialisation phase is done in consant time - one should only choose k random points from the dataset. In kmeans++, on the contrary, after the first center is chosen, the distance to each of the remaining points are calculated. This means passing the data k times, thus time complexity is *O(k*n)*. I have created a basic benchmark for both algorithms comparison:
 ```{r}
 standard <- function(){kmeans(data, centers = 3)}
 pp <- function(){kmeans(data, centers = kmeanspp(data, 3))}

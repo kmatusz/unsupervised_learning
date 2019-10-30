@@ -2,7 +2,6 @@
 
 
 create_one_cluster <- function(center, size) {
-  
   center %>% purrr::map(function(x) {
     rnorm(size, mean = x, sd = 1)
   }) %>%
@@ -21,33 +20,47 @@ create_clusters_from_centers <- function(centers, size = 10) {
 }
 
 
-generate_dataset <- function(k = 3, dim_cnt = 2, n_points = 100){
-  map(1:k, 
-      function(x) {runif(dim_cnt, min = 0, max = 500)}) %>%
-    create_clusters_from_centers(n_points) %>%
+generate_dataset <- function(k = 3,
+                             dim_cnt = 2,
+                             n_points = 100) {
+  map(1:k,
+      
+      function(x) {
+        runif(dim_cnt, min = 0, max = 500)
+      }) -> centers
+  
+  CENTERS_GENERATED <<- centers
+  
+  create_clusters_from_centers(centers, n_points) %>%
     select(-cluster_id)
 }
 
 
 kmeanspp <- function(x, k)
 {
-  
   x <- as.matrix(x)
   centers <- matrix(0, nrow = k, ncol = ncol(x))
-  centers[1, ] <- x[sample(1:nrow(x), 1), , drop = FALSE]
+  centers[1,] <- x[sample(1:nrow(x), 1), , drop = FALSE]
   target_point <- centers[1L, , drop = FALSE]
   
-  d <- apply(x, MARGIN = 1,
-             function(x)
-               (sqrt(sum((x - target_point) ^ 2)))^2)
+  map(1:ncol(x), function(i) {
+    (x[, i] - target_point[, i]) ^ 2
+  }) -> distances_list
+  
+  
+  d <- sqrt(Reduce(`+`, distances_list)) ^ 2
+  
   for (l in 2:k) {
-    centers[l, ] <- x[sample(1:nrow(x), 1, prob = d), , drop = FALSE]
+    centers[l,] <- x[sample(1:nrow(x), 1, prob = d), , drop = FALSE]
     
     target_point <- centers[l, , drop = FALSE]
     
-    arg2 <- apply(x, MARGIN = 1,
-                  function(x)
-                    (sqrt(sum((x - target_point) ^ 2)))^2)
+    map(1:ncol(x), function(i) {
+      (x[, i] - target_point[, i]) ^ 2
+    }) -> distances_list
+    
+    
+    arg2 <- sqrt(Reduce(`+`, distances_list)) ^ 2
     d <- pmin(d, arg2)
     
     
@@ -84,9 +97,3 @@ run <- function(data,
   
   cluster_results
 }
-
-
-
-
-
-
