@@ -34,6 +34,8 @@ Każdy eksperyment 1000 razy
 library(tidyverse)
 library(kableExtra)
 library(factoextra)
+
+set.seed(10)
 ```
 
 
@@ -71,7 +73,7 @@ create_one_cluster(list(1,2), 10) %>%
 This function takes a list of cluster centers and generates points:
 
 ```{r}
-sample_clusters <- function(centers, size = 10) {
+create_clusters_from_centers <- function(centers, size = 10) {
   # centers - list
   centers %>%
     purrr::map(create_one_cluster, size) %>%
@@ -85,7 +87,7 @@ cluster_centers <- list(c(1, 10),
                         c(2, 3),
                         c(5, 8))
 
-sample_clusters(cluster_centers, 100) -> data_with_id
+create_clusters_from_centers(cluster_centers, 100) -> data_with_id
 ```
 
 
@@ -159,12 +161,12 @@ ggplot(bulk_results, aes(x=betweenss))+
 As we can see, the majority of clusterings is close to the most optimal one. However, there is also some amount of clusterings with betweenss at around 2650. This is how such example clustering looks like:
 
 ```{r}
-bulk_results %>%
-  filter(betweenss < 3000) %>%
-  head(1) %>%
-  .$cluster_object %>%
-  .[[1]] %>%
-  fviz_cluster(data = data)
+# bulk_results %>%
+#   filter(betweenss < 3000) %>%
+#   head(1) %>%
+#   .$cluster_object %>%
+#   .[[1]] %>%
+#   fviz_cluster(data = data)
 ```
 
 
@@ -212,7 +214,7 @@ kmeanspp <- function(x, k)
 To apply it in replacement for stats::kmeans default, the code looks like this:
 
 ```{r}
-kmeans(data, centers = kmeanspp(data, k))
+kmeans(data, centers = kmeanspp(data, 3))
 ```
 
 
@@ -224,29 +226,57 @@ I have created few artificial datasets and manipulated few parameters, namely nu
 
 I have created two artificial datasets - one with k=3 and 2 dimensions, and the other one with k=10 and 10 dimensions. In both cases, cluster centers were chosen uniformly from a [0, 500] space. The clusters were generated from n-dimensional Gaussian with cov=0 and sd = 1. Each cluster consisted of 100 points. 
 
-As the simulations took a long time on my computer, I calculated them once and saved as Rdata. The codes are avaliable in *aa.R* here. 
+As the simulations took a long time on my computer, I calculated them once and saved as Rdata. The codes are avaliable in *aa.R* here. I have plotted total within-sum-of-squares. Once again, the less the better:
 
-K-means algorithm can be divided into two parts-one is center initialisation and the other one is actual algorithm.
+```{r}
+load("results/batch_experiments.Rdata")
+results_k10_n10 %>% 
+  mutate(type = "standard") %>%
+  rbind(results_k10_n10_pp %>% 
+          mutate(type = "++")) -> results_k10_n10_all
+
+ggplot(results_k10_n10_all, aes(x = tot.withinss, fill = type, color = type)) +
+         geom_histogram(alpha=0.5) +
+  facet_grid(rows = vars(type), scales = "free") +
+  theme_minimal()
+
+```
+
+This picture says more than thousand words. K-means++ outperformed standard version substantially. Here are the results statistics:
+
+```{r}
+results_k10_n10_all %>% 
+  select(-cluster_object) %>%
+  group_by(type) %>%
+  summarise(
+    min = min(tot.withinss),
+    q25 = quantile(tot.withinss, 0.25),
+    q50 = quantile(tot.withinss, 0.5),
+    q75 = quantile(tot.withinss, 0.75),
+    max = max(tot.withinss)
+  ) %>% 
+  arrange(desc(type)) %>%
+  kable() %>%
+  kable_styling()
+```
 
 
 
+What are the drawbacks of kmeans++? There is one: speed. As of standard algorithm, the initialisation phase is done in consant time - one should only choose k random points from the dataset. In kmeans++, on the contrary, after the first center is chosen, the distance to each of the remaining points are calculated. This means passing the data k times, thus time complexity is *O(k)*. I have created a basic benchmark for both algorithms comparison:
+```{r}
+standard <- function(){kmeans(data, centers = 3)}
+pp <- function(){kmeans(data, centers = kmeanspp(data, 3))}
+microbenchmark::microbenchmark(
+standard(),
+pp()
+)
+
+```
 
 
+As we can see, the standard function is 10 times faster than kmeans++. For some applications, this disqualifies the method. There are however possible workarounds. One thing is alogirthm complexity itself, and the other is implementation - to make kmeans++ code faster, implementing it in C or Fortran (as basic *stats::kmeans* code) would be needed.
 
-Procedure of initialisation implemented in stats package is pretty straighforward. 
-
-
-
-
-
-
-
-
-
-
-
-
-
+There is also other proposed solution made by ... , aimed specifically at big data solutions. The authors show a k-means|| (parallel) algoirthm. It has the same theoretical improvements as kmeans++, however is substantially faster, and can be implemented to leverage multiple threads. 
 
 
 

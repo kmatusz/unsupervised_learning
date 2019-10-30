@@ -1,5 +1,8 @@
-# funs ---
+# Cluster generation
+
+
 create_one_cluster <- function(center, size) {
+  
   center %>% purrr::map(function(x) {
     rnorm(size, mean = x, sd = 1)
   }) %>%
@@ -10,7 +13,7 @@ create_one_cluster <- function(center, size) {
 }
 
 
-sample_clusters <- function(centers, size = 10) {
+create_clusters_from_centers <- function(centers, size = 10) {
   # centers - list
   centers %>%
     map(create_one_cluster, size) %>%
@@ -18,8 +21,17 @@ sample_clusters <- function(centers, size = 10) {
 }
 
 
+generate_dataset <- function(k = 3, dim_cnt = 2, n_points = 100){
+  map(1:k, 
+      function(x) {runif(dim_cnt, min = 0, max = 500)}) %>%
+    create_clusters_from_centers(n_points) %>%
+    select(-cluster_id)
+}
+
+
 kmeanspp <- function(x, k)
 {
+  
   x <- as.matrix(x)
   centers <- matrix(0, nrow = k, ncol = ncol(x))
   centers[1, ] <- x[sample(1:nrow(x), 1), , drop = FALSE]
@@ -75,26 +87,6 @@ run <- function(data,
 
 
 
-
-create_data <- function(cluster_centers, n=100){
-  sample_clusters(cluster_centers, n) -> data_with_id
-  data_with_id %>% select(-cluster_id)
-}
-
-
-generate_cluster_centers <- function(cnt, dim_cnt){
-  map(1:cnt, function(x) {runif(dim_cnt, min = 0, max = 500)})
-}
-
-run_full_experiment <- function(data, pp = FALSE, niter = 1000){
-  data %>%
-    run(niter = niter, k = k, pp = pp)
-}
-
-generate_full_data <- function(k = 3, dim_cnt = 2, n_points = 100){
-  generate_cluster_centers(k, dim_cnt) %>%
-    create_data(n = n_points)
-}
 
 
 
