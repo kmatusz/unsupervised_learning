@@ -16,7 +16,7 @@ library(factoextra)
 set.seed(10)
 ```
 
-
+TODO: Dodać plot dla k =3
 
 K-means is one of the most popular clustering techniques, used by many for a long time. Its simplicity and relative speed are appealing. However, the corectness of the results can be questionable and vary from one run to another. 
 
