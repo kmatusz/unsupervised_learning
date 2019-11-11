@@ -25,7 +25,7 @@ data_k10_n10 <- generate_dataset(k=10, dim_cnt = 10, n_points = 100)
 data_k10_n10_centers <- CENTERS_GENERATED
 
 data_k10_n10_centers %>% 
-  bind_cols() %>% 
+  bind_cols() %>%  
   t() %>% 
   as_tibble() -> data_k10_n10_centers
 
